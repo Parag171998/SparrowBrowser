@@ -1,6 +1,7 @@
 package com.example.emptyproject.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -11,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.emptyproject.model.PageLoadState
 import com.example.emptyproject.ui.BrowserIntent
 import com.example.emptyproject.ui.BrowserUiState
 import com.example.emptyproject.ui.preview.BrowserPreviewData
@@ -24,36 +26,48 @@ fun BrowserTopBar(
     onIntent: (BrowserIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
+    Column(
         modifier = modifier
             .fillMaxWidth()
             .background(ToolbarBackground)
-            .statusBarsPadding()
-            .height(Dimens.toolbarHeight)
-            .padding(horizontal = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .statusBarsPadding(),
     ) {
-        NavButtons(
-            canGoBack = state.canGoBack,
-            canGoForward = state.canGoForward,
-            onIntent = onIntent,
-        )
-        Omnibox(
-            text = state.omniboxText,
-            isFocused = state.isOmniboxFocused,
-            favicon = state.favicon,
-            onIntent = onIntent,
+        Row(
             modifier = Modifier
-                .weight(1f)
+                .fillMaxWidth()
+                .height(Dimens.toolbarHeight)
                 .padding(horizontal = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            NavButtons(
+                canGoBack = state.canGoBack,
+                canGoForward = state.canGoForward,
+                onIntent = onIntent,
+            )
+            Omnibox(
+                text = state.omniboxText,
+                isFocused = state.isOmniboxFocused,
+                favicon = state.favicon,
+                onIntent = onIntent,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 4.dp),
+            )
+            ReloadStopButton(
+                isLoading = state.loadState == PageLoadState.Loading,
+                onIntent = onIntent,
+            )
+        }
+        LoadProgressBar(
+            loadState = state.loadState,
+            progress = state.loadProgress,
         )
-        ReloadStopButton(onIntent = onIntent)
     }
 }
 
 @Preview(name = "Top Bar - Home", showBackground = true)
 @Composable
-private fun BrowserTopBarNewTabPreview() {
+private fun BrowserTopBarHomePreview() {
     SparrowBrowserTheme {
         BrowserTopBar(
             state = BrowserPreviewData.home,
@@ -68,6 +82,17 @@ private fun BrowserTopBarBrowsingPreview() {
     SparrowBrowserTheme {
         BrowserTopBar(
             state = BrowserPreviewData.browsing,
+            onIntent = {},
+        )
+    }
+}
+
+@Preview(name = "Top Bar - Loading", showBackground = true)
+@Composable
+private fun BrowserTopBarLoadingPreview() {
+    SparrowBrowserTheme {
+        BrowserTopBar(
+            state = BrowserPreviewData.browsingLoading,
             onIntent = {},
         )
     }

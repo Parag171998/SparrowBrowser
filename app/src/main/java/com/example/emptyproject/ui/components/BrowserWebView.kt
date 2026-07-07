@@ -37,6 +37,7 @@ fun BrowserWebView(
                 WebViewCommand.GoBack -> if (holder.webView.canGoBack()) holder.webView.goBack()
                 WebViewCommand.GoForward -> if (holder.webView.canGoForward()) holder.webView.goForward()
                 WebViewCommand.Reload -> holder.webView.reload()
+                WebViewCommand.StopLoading -> holder.webView.stopLoading()
             }
         }
     }

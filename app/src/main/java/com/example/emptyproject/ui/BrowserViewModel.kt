@@ -60,6 +60,7 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
             is BrowserIntent.GoBack -> emitWebViewCommand(WebViewCommand.GoBack)
             is BrowserIntent.GoForward -> emitWebViewCommand(WebViewCommand.GoForward)
             is BrowserIntent.Reload -> emitWebViewCommand(WebViewCommand.Reload)
+            is BrowserIntent.StopLoading -> handleStopLoading()
             is BrowserIntent.OpenTabSwitcher -> {
                 _state.update { it.copy(screen = Screen.TabSwitcher) }
             }
@@ -185,12 +186,42 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    private fun handleStopLoading() {
+        emitWebViewCommand(WebViewCommand.StopLoading)
+        updateActiveTab { tab ->
+            if (tab.loadState is PageLoadState.Loading) {
+                tab.copy(loadState = PageLoadState.Loaded)
+            } else {
+                tab
+            }
+        }
+        _state.update {
+            it.copy(
+                loadState = PageLoadState.Loaded,
+                loadProgress = 0,
+            )
+        }
+    }
+
     private fun handleProgressChanged(progress: Int) {
         _state.update {
             it.copy(
                 loadProgress = progress,
-                loadState = if (progress < 100) PageLoadState.Loading else it.loadState,
+                loadState = when {
+                    progress >= 100 -> PageLoadState.Loaded
+                    progress > 0 -> PageLoadState.Loading
+                    else -> it.loadState
+                },
             )
+        }
+        if (progress >= 100) {
+            updateActiveTab { tab ->
+                if (tab.loadState is PageLoadState.Loading) {
+                    tab.copy(loadState = PageLoadState.Loaded)
+                } else {
+                    tab
+                }
+            }
         }
     }
 

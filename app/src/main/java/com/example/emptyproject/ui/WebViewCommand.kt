@@ -4,4 +4,5 @@ sealed interface WebViewCommand {
     data object GoBack : WebViewCommand
     data object GoForward : WebViewCommand
     data object Reload : WebViewCommand
+    data object StopLoading : WebViewCommand
 }

@@ -137,6 +137,17 @@ private fun BrowsingPreviewPlaceholder(
     }
 }
 
+@Preview(name = "Shell - Loading", showBackground = true, showSystemUi = true)
+@Composable
+private fun BrowserShellLoadingPreview() {
+    SparrowBrowserTheme {
+        BrowserShellContent(
+            state = BrowserPreviewData.browsingLoading,
+            onIntent = {},
+        )
+    }
+}
+
 @Preview(name = "Shell - Browsing", showBackground = true, showSystemUi = true)
 @Composable
 private fun BrowserShellBrowsingPreview() {
