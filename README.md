@@ -10,7 +10,7 @@ A lightweight general-purpose Android browser built with **Kotlin**, **Jetpack C
 - **Tab switcher** — grid of tab cards with thumbnails, titles, and close buttons
 - **Loading state** — animated progress bar under the top bar; reload/stop toggle
 - **Error state** — full-page error overlay with retry; omnibox keeps the failed URL
-- **Home start page** — Sparrow branding with shortcut cards (Wikipedia, Daily News, Kotlin Docs)
+- **Home start page** — dedicated search box plus shortcut cards; no fixed URL auto-loaded on launch
 - **System back** — WebView history first; closes tab switcher when open
 
 ## Architecture
@@ -83,7 +83,7 @@ Install the debug APK on a device or emulator (API 24+).
 - [ ] Top and bottom bars visible on home, browsing, and error states
 - [ ] Omnibox shows favicon after page load
 - [ ] Omnibox updates when tapping in-page links
-- [ ] Home button returns to start page with shortcuts
+- [ ] Home button returns to start page with dedicated search box
 - [ ] Back/forward disabled at history bounds
 - [ ] System back walks WebView history
 - [ ] Progress bar animates during load

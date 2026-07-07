@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.emptyproject.R
@@ -38,7 +37,7 @@ fun HomeStartContent(
             .padding(horizontal = 24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Spacer(modifier = Modifier.weight(0.35f))
+        Spacer(modifier = Modifier.weight(0.3f))
         BrowserIcon(
             resId = R.drawable.ic_sparrow_logo,
             contentDescription = null,
@@ -57,10 +56,15 @@ fun HomeStartContent(
             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             modifier = Modifier.padding(top = 4.dp),
         )
+        Spacer(modifier = Modifier.height(28.dp))
+        StartSearchBox(
+            onIntent = onIntent,
+            modifier = Modifier.fillMaxWidth(),
+        )
         Spacer(modifier = Modifier.height(Dimens.homeShortcutTopSpacing))
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly,
+            horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             DefaultShortcuts.items.forEach { shortcut ->
                 ShortcutCard(
@@ -70,13 +74,6 @@ fun HomeStartContent(
             }
         }
         Spacer(modifier = Modifier.weight(1f))
-        Text(
-            text = stringResource(R.string.home_disclaimer),
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(bottom = 24.dp),
-        )
     }
 }
 

@@ -1,7 +1,8 @@
 <resources>
     <string name="app_name">Sparrow Browser</string>
     <string name="home_title">Sparrow</string>
-    <string name="home_subtitle">Search or pick a shortcut below</string>
+    <string name="home_subtitle">Search the web or pick a shortcut</string>
+    <string name="start_search_placeholder">Search the web</string>
     <string name="home_disclaimer">Sparrow Browser is a demo project. Pages are loaded from the public web.</string>
     <string name="omnibox_placeholder">Search or type URL</string>
     <string name="error_headline">Can\'t reach this page</string>

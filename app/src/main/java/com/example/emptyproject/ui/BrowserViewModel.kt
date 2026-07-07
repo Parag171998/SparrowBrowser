@@ -151,16 +151,7 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
     private fun handleGoHome() {
         val tabId = _state.value.activeTabId
         updateTab(tabId) {
-            it.copy(
-                url = BrowserConstants.HOME_URL,
-                loadState = PageLoadState.Loading,
-                isNewTab = false,
-                pendingLoadUrl = BrowserConstants.HOME_URL,
-                loadProgress = 0,
-                showError = false,
-                errorUrl = null,
-                favicon = null,
-            )
+            Tab(id = it.id, isNewTab = true)
         }
         _state.update { it.copy(screen = Screen.Browsing, isOmniboxFocused = false) }
     }
@@ -299,12 +290,6 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun createHomeTab(tabId: String): Tab {
-        return Tab(
-            id = tabId,
-            url = BrowserConstants.HOME_URL,
-            loadState = PageLoadState.Loading,
-            isNewTab = false,
-            pendingLoadUrl = BrowserConstants.HOME_URL,
-        )
+        return Tab(id = tabId, isNewTab = true)
     }
 }

@@ -20,7 +20,8 @@ object Dimens {
     val tabCardElevation = 2.dp
     val tabCardCornerRadius = 12.dp
     val shortcutCardCornerRadius = 12.dp
-    val homeShortcutTopSpacing = 40.dp
+    val homeShortcutTopSpacing = 32.dp
+    val startSearchBoxHeight = 52.dp
     val tabCountBadgeSize = 20.dp
     val tabCountBadgeCornerRadius = 4.dp
 }

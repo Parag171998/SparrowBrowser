@@ -13,10 +13,7 @@ object BrowserPreviewData {
         tabs = listOf(
             Tab(
                 id = TAB_ID,
-                title = "Google",
-                url = "https://www.google.com",
-                loadState = PageLoadState.Loaded,
-                isNewTab = false,
+                isNewTab = true,
             ),
         ),
         activeTabId = TAB_ID,
@@ -88,9 +85,7 @@ object BrowserPreviewData {
             ),
             Tab(
                 id = "preview-tab-3",
-                title = "Google",
-                url = "https://www.google.com",
-                isNewTab = false,
+                isNewTab = true,
             ),
         ),
         activeTabId = TAB_ID,

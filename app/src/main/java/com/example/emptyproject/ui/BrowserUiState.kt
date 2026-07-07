@@ -2,7 +2,6 @@ package com.example.emptyproject.ui
 
 import com.example.emptyproject.model.PageLoadState
 import com.example.emptyproject.model.Tab
-import com.example.emptyproject.util.isHomePage
 
 enum class Screen {
     Browsing,
@@ -34,8 +33,5 @@ fun BrowserUiState.activeShowError(): Boolean = activeTab()?.showError == true
 
 fun BrowserUiState.showHomeStart(): Boolean {
     val tab = activeTab() ?: return false
-    return screen == Screen.Browsing &&
-        !tab.showError &&
-        !isOmniboxFocused &&
-        tab.url.isHomePage()
+    return screen == Screen.Browsing && !tab.showError && tab.isNewTab
 }

@@ -86,7 +86,7 @@ fun BrowserShellContent(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            if (LocalInspectionMode.current) {
+            if (LocalInspectionMode.current && !state.showHomeStart()) {
                 BrowsingPreviewPlaceholder(state = state, modifier = Modifier.fillMaxSize())
             } else if (hasWebView) {
                 MultiTabWebViewLayer(
