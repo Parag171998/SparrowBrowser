@@ -1,5 +1,6 @@
 package com.example.emptyproject.ui.screens
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,17 +15,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.activity.compose.BackHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.emptyproject.ui.BrowserIntent
 import com.example.emptyproject.ui.BrowserUiState
 import com.example.emptyproject.ui.BrowserViewModel
 import com.example.emptyproject.ui.Screen
 import com.example.emptyproject.ui.WebViewCommand
+import com.example.emptyproject.ui.activeCanGoBack
+import com.example.emptyproject.ui.activeOmniboxText
+import com.example.emptyproject.ui.activeShowError
 import com.example.emptyproject.ui.components.BrowserBottomBar
 import com.example.emptyproject.ui.components.BrowserTopBar
-import com.example.emptyproject.ui.components.BrowserWebView
 import com.example.emptyproject.ui.components.ErrorContent
+import com.example.emptyproject.ui.components.MultiTabWebViewLayer
+import com.example.emptyproject.ui.components.TabSwitcherScreen
 import com.example.emptyproject.ui.preview.BrowserPreviewData
 import com.example.emptyproject.ui.theme.SparrowBrowserTheme
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -37,10 +41,10 @@ fun BrowserShell(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    val backEnabled = remember(state.screen, state.canGoBack) {
+    val backEnabled = remember(state.screen, state.activeTabId, state.tabs) {
         when (state.screen) {
             Screen.TabSwitcher -> true
-            Screen.Browsing -> state.canGoBack
+            Screen.Browsing -> state.activeCanGoBack()
         }
     }
 
@@ -63,8 +67,7 @@ fun BrowserShellContent(
     modifier: Modifier = Modifier,
     webViewCommands: SharedFlow<WebViewCommand> = MutableSharedFlow(),
 ) {
-    val activeTab = state.tabs.find { it.id == state.activeTabId }
-    val hasWebView = activeTab?.isNewTab == false
+    val hasWebView = state.tabs.any { !it.isNewTab }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -81,14 +84,20 @@ fun BrowserShellContent(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            BrowserContentLayer(
-                state = state,
-                onIntent = onIntent,
-                webViewCommands = webViewCommands,
-                hasWebView = hasWebView,
-            )
+            if (LocalInspectionMode.current) {
+                BrowsingPreviewPlaceholder(state = state, modifier = Modifier.fillMaxSize())
+            } else if (hasWebView) {
+                MultiTabWebViewLayer(
+                    tabs = state.tabs,
+                    activeTabId = state.activeTabId,
+                    screen = state.screen,
+                    onIntent = onIntent,
+                    webViewCommands = webViewCommands,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
 
-            if (state.showError) {
+            if (state.activeShowError() && state.screen == Screen.Browsing) {
                 ErrorContent(
                     onIntent = onIntent,
                     modifier = Modifier.fillMaxSize(),
@@ -96,41 +105,12 @@ fun BrowserShellContent(
             }
 
             if (state.screen == Screen.TabSwitcher) {
-                Box(
+                TabSwitcherScreen(
+                    state = state,
+                    onIntent = onIntent,
                     modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "Tab Switcher (${state.tabs.size} tabs)",
-                        style = MaterialTheme.typography.headlineMedium,
-                    )
-                }
+                )
             }
-        }
-    }
-}
-
-@Composable
-private fun BrowserContentLayer(
-    state: BrowserUiState,
-    onIntent: (BrowserIntent) -> Unit,
-    webViewCommands: SharedFlow<WebViewCommand>,
-    hasWebView: Boolean,
-) {
-    when {
-        LocalInspectionMode.current -> {
-            BrowsingPreviewPlaceholder(
-                state = state,
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
-        hasWebView -> {
-            BrowserWebView(
-                state = state,
-                onIntent = onIntent,
-                webViewCommands = webViewCommands,
-                modifier = Modifier.fillMaxSize(),
-            )
         }
     }
 }
@@ -146,10 +126,22 @@ private fun BrowsingPreviewPlaceholder(
     ) {
         Text(
             text = when {
-                state.showError -> "Error"
-                else -> state.omniboxText.ifBlank { "WebView" }
+                state.screen == Screen.TabSwitcher -> "Tab Switcher (${state.tabs.size})"
+                state.activeShowError() -> "Error"
+                else -> state.activeOmniboxText().ifBlank { "WebView" }
             },
             style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
+
+@Preview(name = "Shell - Tab Switcher", showBackground = true, showSystemUi = true)
+@Composable
+private fun BrowserShellTabSwitcherPreview() {
+    SparrowBrowserTheme {
+        BrowserShellContent(
+            state = BrowserPreviewData.tabSwitcher,
+            onIntent = {},
         )
     }
 }
@@ -182,17 +174,6 @@ private fun BrowserShellBrowsingPreview() {
     SparrowBrowserTheme {
         BrowserShellContent(
             state = BrowserPreviewData.browsing,
-            onIntent = {},
-        )
-    }
-}
-
-@Preview(name = "Shell - Tab Switcher", showBackground = true, showSystemUi = true)
-@Composable
-private fun BrowserShellTabSwitcherPreview() {
-    SparrowBrowserTheme {
-        BrowserShellContent(
-            state = BrowserPreviewData.tabSwitcher,
             onIntent = {},
         )
     }

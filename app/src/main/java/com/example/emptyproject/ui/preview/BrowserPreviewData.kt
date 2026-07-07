@@ -13,6 +13,7 @@ object BrowserPreviewData {
         tabs = listOf(
             Tab(
                 id = TAB_ID,
+                title = "Google",
                 url = "https://www.google.com",
                 loadState = PageLoadState.Loaded,
                 isNewTab = false,
@@ -20,8 +21,6 @@ object BrowserPreviewData {
         ),
         activeTabId = TAB_ID,
         screen = Screen.Browsing,
-        omniboxText = "https://www.google.com",
-        loadState = PageLoadState.Loaded,
     )
 
     val browsing = BrowserUiState(
@@ -32,14 +31,12 @@ object BrowserPreviewData {
                 url = "https://en.wikipedia.org",
                 loadState = PageLoadState.Loaded,
                 isNewTab = false,
+                canGoBack = true,
+                canGoForward = false,
             ),
         ),
         activeTabId = TAB_ID,
         screen = Screen.Browsing,
-        omniboxText = "https://en.wikipedia.org",
-        loadState = PageLoadState.Loaded,
-        canGoBack = true,
-        canGoForward = false,
     )
 
     val browsingLoading = BrowserUiState(
@@ -49,15 +46,13 @@ object BrowserPreviewData {
                 title = "News",
                 url = "https://news.example.com",
                 loadState = PageLoadState.Loading,
+                loadProgress = 45,
                 isNewTab = false,
+                canGoBack = true,
             ),
         ),
         activeTabId = TAB_ID,
         screen = Screen.Browsing,
-        omniboxText = "https://news.example.com",
-        loadState = PageLoadState.Loading,
-        loadProgress = 45,
-        canGoBack = true,
     )
 
     val browsingError = BrowserUiState(
@@ -66,15 +61,13 @@ object BrowserPreviewData {
                 id = TAB_ID,
                 url = "https://invalid.example.com",
                 loadState = PageLoadState.Error("https://invalid.example.com"),
+                showError = true,
+                errorUrl = "https://invalid.example.com",
                 isNewTab = false,
             ),
         ),
         activeTabId = TAB_ID,
         screen = Screen.Browsing,
-        omniboxText = "https://invalid.example.com",
-        loadState = PageLoadState.Error("https://invalid.example.com"),
-        showError = true,
-        errorUrl = "https://invalid.example.com",
     )
 
     val tabSwitcher = BrowserUiState(
@@ -93,7 +86,12 @@ object BrowserPreviewData {
                 loadState = PageLoadState.Loaded,
                 isNewTab = false,
             ),
-            Tab(id = "preview-tab-3", url = "https://www.google.com", isNewTab = false),
+            Tab(
+                id = "preview-tab-3",
+                title = "Google",
+                url = "https://www.google.com",
+                isNewTab = false,
+            ),
         ),
         activeTabId = TAB_ID,
         screen = Screen.TabSwitcher,

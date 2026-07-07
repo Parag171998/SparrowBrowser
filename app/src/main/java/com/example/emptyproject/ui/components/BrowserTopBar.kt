@@ -15,6 +15,12 @@ import androidx.compose.ui.unit.dp
 import com.example.emptyproject.model.PageLoadState
 import com.example.emptyproject.ui.BrowserIntent
 import com.example.emptyproject.ui.BrowserUiState
+import com.example.emptyproject.ui.activeFavicon
+import com.example.emptyproject.ui.activeCanGoBack
+import com.example.emptyproject.ui.activeCanGoForward
+import com.example.emptyproject.ui.activeLoadProgress
+import com.example.emptyproject.ui.activeLoadState
+import com.example.emptyproject.ui.activeOmniboxText
 import com.example.emptyproject.ui.preview.BrowserPreviewData
 import com.example.emptyproject.ui.theme.Dimens
 import com.example.emptyproject.ui.theme.SparrowBrowserTheme
@@ -40,27 +46,27 @@ fun BrowserTopBar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             NavButtons(
-                canGoBack = state.canGoBack,
-                canGoForward = state.canGoForward,
+                canGoBack = state.activeCanGoBack(),
+                canGoForward = state.activeCanGoForward(),
                 onIntent = onIntent,
             )
             Omnibox(
-                text = state.omniboxText,
+                text = state.activeOmniboxText(),
                 isFocused = state.isOmniboxFocused,
-                favicon = state.favicon,
+                favicon = state.activeFavicon(),
                 onIntent = onIntent,
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 4.dp),
             )
             ReloadStopButton(
-                isLoading = state.loadState == PageLoadState.Loading,
+                isLoading = state.activeLoadState() == PageLoadState.Loading,
                 onIntent = onIntent,
             )
         }
         LoadProgressBar(
-            loadState = state.loadState,
-            progress = state.loadProgress,
+            loadState = state.activeLoadState(),
+            progress = state.activeLoadProgress(),
         )
     }
 }

@@ -24,19 +24,9 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
 
     private val _state = MutableStateFlow(
         BrowserUiState(
-            tabs = listOf(
-                Tab(
-                    id = initialTabId,
-                    url = DEFAULT_HOME_URL,
-                    loadState = PageLoadState.Loading,
-                    isNewTab = false,
-                ),
-            ),
+            tabs = listOf(createHomeTab(initialTabId)),
             activeTabId = initialTabId,
             screen = Screen.Browsing,
-            omniboxText = DEFAULT_HOME_URL,
-            loadState = PageLoadState.Loading,
-            pendingLoadUrl = DEFAULT_HOME_URL,
         ),
     )
     val state: StateFlow<BrowserUiState> = _state.asStateFlow()
@@ -47,24 +37,16 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
     fun onIntent(intent: BrowserIntent) {
         when (intent) {
             is BrowserIntent.SearchSubmitted -> handleSearchSubmitted(intent.query)
-            is BrowserIntent.OmniboxChanged -> {
-                _state.update { it.copy(omniboxText = intent.text) }
-            }
-            is BrowserIntent.OmniboxFocused -> {
-                _state.update { it.copy(isOmniboxFocused = true) }
-            }
-            is BrowserIntent.OmniboxBlurred -> {
-                _state.update { it.copy(isOmniboxFocused = false) }
-            }
+            is BrowserIntent.OmniboxChanged -> updateTab(_state.value.activeTabId) { it.copy(url = intent.text) }
+            is BrowserIntent.OmniboxFocused -> _state.update { it.copy(isOmniboxFocused = true) }
+            is BrowserIntent.OmniboxBlurred -> _state.update { it.copy(isOmniboxFocused = false) }
             is BrowserIntent.GoHome -> handleGoHome()
             is BrowserIntent.GoBack -> emitWebViewCommand(WebViewCommand.GoBack)
             is BrowserIntent.GoForward -> emitWebViewCommand(WebViewCommand.GoForward)
             is BrowserIntent.Reload -> handleReload()
             is BrowserIntent.StopLoading -> handleStopLoading()
             is BrowserIntent.RetryLoad -> handleRetryLoad()
-            is BrowserIntent.OpenTabSwitcher -> {
-                _state.update { it.copy(screen = Screen.TabSwitcher) }
-            }
+            is BrowserIntent.OpenTabSwitcher -> _state.update { it.copy(screen = Screen.TabSwitcher) }
             is BrowserIntent.CloseTabSwitcher -> {
                 _state.update { current ->
                     if (current.screen == Screen.TabSwitcher) {
@@ -74,23 +56,28 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
                     }
                 }
             }
-            is BrowserIntent.NewTab -> Unit // Phase 6
-            is BrowserIntent.LoadUrlConsumed -> _state.update { it.copy(pendingLoadUrl = null) }
-            is BrowserIntent.PageStarted -> handlePageStarted(intent.url)
-            is BrowserIntent.PageFinished -> handlePageFinished(intent.url)
-            is BrowserIntent.ProgressChanged -> handleProgressChanged(intent.progress)
-            is BrowserIntent.TitleChanged -> handleTitleChanged(intent.title)
-            is BrowserIntent.FaviconReceived -> _state.update { it.copy(favicon = intent.favicon) }
-            is BrowserIntent.LoadFailed -> handleLoadFailed(intent.url)
+            is BrowserIntent.NewTab -> handleNewTab()
+            is BrowserIntent.SwitchTab -> handleSwitchTab(intent.tabId)
+            is BrowserIntent.CloseTab -> handleCloseTab(intent.tabId)
+            is BrowserIntent.LoadUrlConsumed -> {
+                updateTab(intent.tabId) { it.copy(pendingLoadUrl = null) }
+            }
+            is BrowserIntent.PageStarted -> handlePageStarted(intent.tabId, intent.url)
+            is BrowserIntent.PageFinished -> handlePageFinished(intent.tabId, intent.url)
+            is BrowserIntent.ProgressChanged -> handleProgressChanged(intent.tabId, intent.progress)
+            is BrowserIntent.TitleChanged -> handleTitleChanged(intent.tabId, intent.title)
+            is BrowserIntent.FaviconReceived -> {
+                updateTab(intent.tabId) { it.copy(favicon = intent.favicon) }
+            }
+            is BrowserIntent.LoadFailed -> handleLoadFailed(intent.tabId, intent.url)
             is BrowserIntent.NavStateChanged -> {
-                _state.update {
-                    it.copy(
-                        canGoBack = intent.canGoBack,
-                        canGoForward = intent.canGoForward,
-                    )
+                updateTab(intent.tabId) {
+                    it.copy(canGoBack = intent.canGoBack, canGoForward = intent.canGoForward)
                 }
             }
-            else -> Unit
+            is BrowserIntent.ThumbnailCaptured -> {
+                updateTab(intent.tabId) { it.copy(thumbnail = intent.thumbnail) }
+            }
         }
     }
 
@@ -101,7 +88,7 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
                 onIntent(BrowserIntent.CloseTabSwitcher)
                 true
             }
-            current.screen == Screen.Browsing && current.canGoBack -> {
+            current.screen == Screen.Browsing && current.activeCanGoBack() -> {
                 onIntent(BrowserIntent.GoBack)
                 true
             }
@@ -109,73 +96,95 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    private fun handleNewTab() {
+        if (_state.value.tabs.size >= MAX_TABS) return
+        val tabId = UUID.randomUUID().toString()
+        _state.update {
+            it.copy(
+                tabs = it.tabs + createHomeTab(tabId),
+                activeTabId = tabId,
+                screen = Screen.Browsing,
+                isOmniboxFocused = false,
+            )
+        }
+    }
+
+    private fun handleSwitchTab(tabId: String) {
+        if (_state.value.tabs.none { it.id == tabId }) return
+        _state.update {
+            it.copy(
+                activeTabId = tabId,
+                screen = Screen.Browsing,
+                isOmniboxFocused = false,
+            )
+        }
+    }
+
+    private fun handleCloseTab(tabId: String) {
+        val current = _state.value
+        val remaining = current.tabs.filter { it.id != tabId }
+        if (remaining.isEmpty()) {
+            val newTabId = UUID.randomUUID().toString()
+            _state.value = BrowserUiState(
+                tabs = listOf(createHomeTab(newTabId)),
+                activeTabId = newTabId,
+                screen = Screen.Browsing,
+            )
+            return
+        }
+        val newActiveId = if (tabId == current.activeTabId) {
+            val index = current.tabs.indexOfFirst { it.id == tabId }
+            remaining.getOrElse(index.coerceAtMost(remaining.lastIndex)) { remaining.first() }.id
+        } else {
+            current.activeTabId
+        }
+        _state.update {
+            it.copy(
+                tabs = remaining,
+                activeTabId = newActiveId,
+                screen = if (it.screen == Screen.TabSwitcher) Screen.TabSwitcher else Screen.Browsing,
+            )
+        }
+    }
+
     private fun handleGoHome() {
-        updateActiveTab {
+        val tabId = _state.value.activeTabId
+        updateTab(tabId) {
             it.copy(
                 url = DEFAULT_HOME_URL,
                 loadState = PageLoadState.Loading,
                 isNewTab = false,
-            )
-        }
-        _state.update {
-            it.copy(
-                screen = Screen.Browsing,
-                omniboxText = DEFAULT_HOME_URL,
-                favicon = null,
-                isOmniboxFocused = false,
                 pendingLoadUrl = DEFAULT_HOME_URL,
-                loadState = PageLoadState.Loading,
                 loadProgress = 0,
                 showError = false,
                 errorUrl = null,
+                favicon = null,
             )
         }
+        _state.update { it.copy(screen = Screen.Browsing, isOmniboxFocused = false) }
     }
 
     private fun handleSearchSubmitted(query: String) {
         val url = resolveInputToUrl(query)
         if (url.isBlank()) return
-
-        updateActiveTab {
+        val tabId = _state.value.activeTabId
+        updateTab(tabId) {
             it.copy(
                 isNewTab = false,
                 url = url,
                 loadState = PageLoadState.Loading,
-            )
-        }
-        _state.update {
-            it.copy(
-                screen = Screen.Browsing,
-                omniboxText = url,
-                loadState = PageLoadState.Loading,
-                loadProgress = 0,
-                showError = false,
-                errorUrl = null,
                 pendingLoadUrl = url,
-                isOmniboxFocused = false,
-            )
-        }
-    }
-
-    private fun handlePageStarted(url: String) {
-        updateActiveTab {
-            it.copy(url = url, loadState = PageLoadState.Loading, isNewTab = false)
-        }
-        _state.update {
-            it.copy(
-                omniboxText = url,
-                loadState = PageLoadState.Loading,
                 loadProgress = 0,
                 showError = false,
                 errorUrl = null,
-                isOmniboxFocused = false,
             )
         }
+        _state.update { it.copy(screen = Screen.Browsing, isOmniboxFocused = false) }
     }
 
     private fun handleReload() {
-        val current = _state.value
-        if (current.showError && !current.errorUrl.isNullOrBlank()) {
+        val tab = _state.value.activeTab() ?: return
+        if (tab.showError && !tab.errorUrl.isNullOrBlank()) {
             handleRetryLoad()
         } else {
             emitWebViewCommand(WebViewCommand.Reload)
@@ -183,62 +192,64 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun handleRetryLoad() {
-        val url = _state.value.errorUrl?.takeIf { it.isNotBlank() }
-            ?: _state.value.omniboxText.takeIf { it.isNotBlank() }
-            ?: return
-
-        updateActiveTab {
-            it.copy(url = url, loadState = PageLoadState.Loading)
-        }
-        _state.update {
+        val tab = _state.value.activeTab() ?: return
+        val url = tab.errorUrl?.takeIf { it.isNotBlank() } ?: tab.url.takeIf { it.isNotBlank() } ?: return
+        updateTab(tab.id) {
             it.copy(
+                url = url,
+                loadState = PageLoadState.Loading,
+                pendingLoadUrl = url,
+                loadProgress = 0,
                 showError = false,
                 errorUrl = null,
-                loadState = PageLoadState.Loading,
-                loadProgress = 0,
-                pendingLoadUrl = url,
-                isOmniboxFocused = false,
             )
+        }
+        _state.update { it.copy(isOmniboxFocused = false) }
+    }
+
+    private fun handlePageStarted(tabId: String, url: String) {
+        updateTab(tabId) {
+            it.copy(
+                url = url,
+                loadState = PageLoadState.Loading,
+                isNewTab = false,
+                loadProgress = 0,
+                showError = false,
+                errorUrl = null,
+            )
+        }
+        if (tabId == _state.value.activeTabId) {
+            _state.update { it.copy(isOmniboxFocused = false) }
         }
     }
 
-    private fun handlePageFinished(url: String) {
-        if (_state.value.showError || _state.value.loadState is PageLoadState.Error) return
-
-        updateActiveTab {
-            it.copy(url = url, loadState = PageLoadState.Loaded)
+    private fun handlePageFinished(tabId: String, url: String) {
+        val tab = _state.value.tabs.find { it.id == tabId } ?: return
+        if (tab.showError || tab.loadState is PageLoadState.Error) return
+        updateTab(tabId) {
+            it.copy(url = url, loadState = PageLoadState.Loaded, loadProgress = 100)
         }
-        _state.update {
-            it.copy(
-                omniboxText = url,
-                loadState = PageLoadState.Loaded,
-                loadProgress = 100,
-                isOmniboxFocused = false,
-            )
+        if (tabId == _state.value.activeTabId) {
+            _state.update { it.copy(isOmniboxFocused = false) }
         }
     }
 
     private fun handleStopLoading() {
+        val tabId = _state.value.activeTabId
         emitWebViewCommand(WebViewCommand.StopLoading)
-        updateActiveTab { tab ->
+        updateTab(tabId) { tab ->
             if (tab.loadState is PageLoadState.Loading) {
-                tab.copy(loadState = PageLoadState.Loaded)
+                tab.copy(loadState = PageLoadState.Loaded, loadProgress = 0)
             } else {
                 tab
             }
         }
-        _state.update {
-            it.copy(
-                loadState = PageLoadState.Loaded,
-                loadProgress = 0,
-            )
-        }
     }
 
-    private fun handleProgressChanged(progress: Int) {
-        if (_state.value.showError || _state.value.loadState is PageLoadState.Error) return
-
-        _state.update {
+    private fun handleProgressChanged(tabId: String, progress: Int) {
+        val tab = _state.value.tabs.find { it.id == tabId } ?: return
+        if (tab.showError || tab.loadState is PageLoadState.Error) return
+        updateTab(tabId) {
             it.copy(
                 loadProgress = progress,
                 loadState = when {
@@ -248,34 +259,34 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
                 },
             )
         }
-        if (progress >= 100) {
-            updateActiveTab { tab ->
-                if (tab.loadState is PageLoadState.Loading) {
-                    tab.copy(loadState = PageLoadState.Loaded)
-                } else {
-                    tab
-                }
-            }
-        }
     }
 
-    private fun handleTitleChanged(title: String) {
+    private fun handleTitleChanged(tabId: String, title: String) {
         if (title.isBlank()) return
-        updateActiveTab { it.copy(title = title) }
+        updateTab(tabId) { it.copy(title = title) }
     }
 
-    private fun handleLoadFailed(url: String) {
-        updateActiveTab {
-            it.copy(url = url, loadState = PageLoadState.Error(url))
-        }
-        _state.update {
+    private fun handleLoadFailed(tabId: String, url: String) {
+        updateTab(tabId) {
             it.copy(
-                omniboxText = url,
+                url = url,
                 loadState = PageLoadState.Error(url),
                 loadProgress = 0,
                 showError = true,
                 errorUrl = url,
-                isOmniboxFocused = false,
+            )
+        }
+        if (tabId == _state.value.activeTabId) {
+            _state.update { it.copy(isOmniboxFocused = false) }
+        }
+    }
+
+    private fun updateTab(tabId: String, transform: (Tab) -> Tab) {
+        _state.update { current ->
+            current.copy(
+                tabs = current.tabs.map { tab ->
+                    if (tab.id == tabId) transform(tab) else tab
+                },
             )
         }
     }
@@ -286,17 +297,18 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
         }
     }
 
-    private fun updateActiveTab(transform: (Tab) -> Tab) {
-        _state.update { current ->
-            current.copy(
-                tabs = current.tabs.map { tab ->
-                    if (tab.id == current.activeTabId) transform(tab) else tab
-                },
-            )
-        }
+    private fun createHomeTab(tabId: String): Tab {
+        return Tab(
+            id = tabId,
+            url = DEFAULT_HOME_URL,
+            loadState = PageLoadState.Loading,
+            isNewTab = false,
+            pendingLoadUrl = DEFAULT_HOME_URL,
+        )
     }
 
     companion object {
         private const val DEFAULT_HOME_URL = "https://www.google.com"
+        private const val MAX_TABS = 10
     }
 }

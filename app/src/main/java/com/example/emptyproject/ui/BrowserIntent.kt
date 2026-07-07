@@ -18,12 +18,13 @@ sealed interface BrowserIntent {
     data class CloseTab(val tabId: String) : BrowserIntent
     data object NewTab : BrowserIntent
     data object RetryLoad : BrowserIntent
-    data object LoadUrlConsumed : BrowserIntent
-    data class PageStarted(val url: String) : BrowserIntent
-    data class PageFinished(val url: String) : BrowserIntent
-    data class ProgressChanged(val progress: Int) : BrowserIntent
-    data class TitleChanged(val title: String) : BrowserIntent
-    data class FaviconReceived(val favicon: Bitmap?) : BrowserIntent
-    data class LoadFailed(val url: String) : BrowserIntent
-    data class NavStateChanged(val canGoBack: Boolean, val canGoForward: Boolean) : BrowserIntent
+    data class LoadUrlConsumed(val tabId: String) : BrowserIntent
+    data class PageStarted(val tabId: String, val url: String) : BrowserIntent
+    data class PageFinished(val tabId: String, val url: String) : BrowserIntent
+    data class ProgressChanged(val tabId: String, val progress: Int) : BrowserIntent
+    data class TitleChanged(val tabId: String, val title: String) : BrowserIntent
+    data class FaviconReceived(val tabId: String, val favicon: Bitmap?) : BrowserIntent
+    data class LoadFailed(val tabId: String, val url: String) : BrowserIntent
+    data class NavStateChanged(val tabId: String, val canGoBack: Boolean, val canGoForward: Boolean) : BrowserIntent
+    data class ThumbnailCaptured(val tabId: String, val thumbnail: Bitmap?) : BrowserIntent
 }
