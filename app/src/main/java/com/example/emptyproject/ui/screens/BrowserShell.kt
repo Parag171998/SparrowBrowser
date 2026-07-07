@@ -24,6 +24,7 @@ import com.example.emptyproject.ui.WebViewCommand
 import com.example.emptyproject.ui.components.BrowserBottomBar
 import com.example.emptyproject.ui.components.BrowserTopBar
 import com.example.emptyproject.ui.components.BrowserWebView
+import com.example.emptyproject.ui.components.ErrorContent
 import com.example.emptyproject.ui.preview.BrowserPreviewData
 import com.example.emptyproject.ui.theme.SparrowBrowserTheme
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -80,43 +81,56 @@ fun BrowserShellContent(
                 .fillMaxSize()
                 .padding(innerPadding),
         ) {
-            when (state.screen) {
-                Screen.Browsing -> {
-                    if (LocalInspectionMode.current) {
-                        BrowsingPreviewPlaceholder(
-                            state = state,
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                    } else if (hasWebView) {
-                        BrowserWebView(
-                            state = state,
-                            onIntent = onIntent,
-                            webViewCommands = webViewCommands,
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                    }
-                }
+            BrowserContentLayer(
+                state = state,
+                onIntent = onIntent,
+                webViewCommands = webViewCommands,
+                hasWebView = hasWebView,
+            )
 
-                Screen.TabSwitcher -> {
-                    if (hasWebView && !LocalInspectionMode.current) {
-                        BrowserWebView(
-                            state = state,
-                            onIntent = onIntent,
-                            webViewCommands = webViewCommands,
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                    }
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = "Tab Switcher (${state.tabs.size} tabs)",
-                            style = MaterialTheme.typography.headlineMedium,
-                        )
-                    }
+            if (state.showError) {
+                ErrorContent(
+                    onIntent = onIntent,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+
+            if (state.screen == Screen.TabSwitcher) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Tab Switcher (${state.tabs.size} tabs)",
+                        style = MaterialTheme.typography.headlineMedium,
+                    )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun BrowserContentLayer(
+    state: BrowserUiState,
+    onIntent: (BrowserIntent) -> Unit,
+    webViewCommands: SharedFlow<WebViewCommand>,
+    hasWebView: Boolean,
+) {
+    when {
+        LocalInspectionMode.current -> {
+            BrowsingPreviewPlaceholder(
+                state = state,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+        hasWebView -> {
+            BrowserWebView(
+                state = state,
+                onIntent = onIntent,
+                webViewCommands = webViewCommands,
+                modifier = Modifier.fillMaxSize(),
+            )
         }
     }
 }
@@ -131,8 +145,22 @@ private fun BrowsingPreviewPlaceholder(
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = state.omniboxText.ifBlank { "WebView" },
+            text = when {
+                state.showError -> "Error"
+                else -> state.omniboxText.ifBlank { "WebView" }
+            },
             style = MaterialTheme.typography.bodyLarge,
+        )
+    }
+}
+
+@Preview(name = "Shell - Error", showBackground = true, showSystemUi = true)
+@Composable
+private fun BrowserShellErrorPreview() {
+    SparrowBrowserTheme {
+        BrowserShellContent(
+            state = BrowserPreviewData.browsingError,
+            onIntent = {},
         )
     }
 }

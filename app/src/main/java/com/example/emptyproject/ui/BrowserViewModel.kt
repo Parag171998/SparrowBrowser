@@ -59,8 +59,9 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
             is BrowserIntent.GoHome -> handleGoHome()
             is BrowserIntent.GoBack -> emitWebViewCommand(WebViewCommand.GoBack)
             is BrowserIntent.GoForward -> emitWebViewCommand(WebViewCommand.GoForward)
-            is BrowserIntent.Reload -> emitWebViewCommand(WebViewCommand.Reload)
+            is BrowserIntent.Reload -> handleReload()
             is BrowserIntent.StopLoading -> handleStopLoading()
+            is BrowserIntent.RetryLoad -> handleRetryLoad()
             is BrowserIntent.OpenTabSwitcher -> {
                 _state.update { it.copy(screen = Screen.TabSwitcher) }
             }
@@ -172,7 +173,38 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
         }
     }
 
+    private fun handleReload() {
+        val current = _state.value
+        if (current.showError && !current.errorUrl.isNullOrBlank()) {
+            handleRetryLoad()
+        } else {
+            emitWebViewCommand(WebViewCommand.Reload)
+        }
+    }
+
+    private fun handleRetryLoad() {
+        val url = _state.value.errorUrl?.takeIf { it.isNotBlank() }
+            ?: _state.value.omniboxText.takeIf { it.isNotBlank() }
+            ?: return
+
+        updateActiveTab {
+            it.copy(url = url, loadState = PageLoadState.Loading)
+        }
+        _state.update {
+            it.copy(
+                showError = false,
+                errorUrl = null,
+                loadState = PageLoadState.Loading,
+                loadProgress = 0,
+                pendingLoadUrl = url,
+                isOmniboxFocused = false,
+            )
+        }
+    }
+
     private fun handlePageFinished(url: String) {
+        if (_state.value.showError || _state.value.loadState is PageLoadState.Error) return
+
         updateActiveTab {
             it.copy(url = url, loadState = PageLoadState.Loaded)
         }
@@ -204,6 +236,8 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun handleProgressChanged(progress: Int) {
+        if (_state.value.showError || _state.value.loadState is PageLoadState.Error) return
+
         _state.update {
             it.copy(
                 loadProgress = progress,
@@ -238,6 +272,7 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
             it.copy(
                 omniboxText = url,
                 loadState = PageLoadState.Error(url),
+                loadProgress = 0,
                 showError = true,
                 errorUrl = url,
                 isOmniboxFocused = false,

@@ -87,6 +87,17 @@ private fun BrowserTopBarBrowsingPreview() {
     }
 }
 
+@Preview(name = "Top Bar - Error", showBackground = true)
+@Composable
+private fun BrowserTopBarErrorPreview() {
+    SparrowBrowserTheme {
+        BrowserTopBar(
+            state = BrowserPreviewData.browsingError,
+            onIntent = {},
+        )
+    }
+}
+
 @Preview(name = "Top Bar - Loading", showBackground = true)
 @Composable
 private fun BrowserTopBarLoadingPreview() {
