@@ -9,10 +9,19 @@ object BrowserPreviewData {
     private const val TAB_ID = "preview-tab-1"
     private const val TAB_ID_2 = "preview-tab-2"
 
-    val newTab = BrowserUiState(
-        tabs = listOf(Tab(id = TAB_ID, isNewTab = true)),
+    val home = BrowserUiState(
+        tabs = listOf(
+            Tab(
+                id = TAB_ID,
+                url = "https://www.google.com",
+                loadState = PageLoadState.Loaded,
+                isNewTab = false,
+            ),
+        ),
         activeTabId = TAB_ID,
-        screen = Screen.NewTab,
+        screen = Screen.Browsing,
+        omniboxText = "https://www.google.com",
+        loadState = PageLoadState.Loaded,
     )
 
     val browsing = BrowserUiState(
@@ -84,7 +93,7 @@ object BrowserPreviewData {
                 loadState = PageLoadState.Loaded,
                 isNewTab = false,
             ),
-            Tab(id = "preview-tab-3", isNewTab = true),
+            Tab(id = "preview-tab-3", url = "https://www.google.com", isNewTab = false),
         ),
         activeTabId = TAB_ID,
         screen = Screen.TabSwitcher,

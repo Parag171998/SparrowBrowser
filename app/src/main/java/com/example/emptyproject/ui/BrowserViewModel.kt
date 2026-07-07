@@ -1,16 +1,21 @@
 package com.example.emptyproject.ui
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.emptyproject.model.PageLoadState
 import com.example.emptyproject.model.Tab
 import com.example.emptyproject.util.resolveInputToUrl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.UUID
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 @HiltViewModel
 class BrowserViewModel @Inject constructor() : ViewModel() {
@@ -19,16 +24,55 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
 
     private val _state = MutableStateFlow(
         BrowserUiState(
-            tabs = listOf(Tab(id = initialTabId, isNewTab = true)),
+            tabs = listOf(
+                Tab(
+                    id = initialTabId,
+                    url = DEFAULT_HOME_URL,
+                    loadState = PageLoadState.Loading,
+                    isNewTab = false,
+                ),
+            ),
             activeTabId = initialTabId,
-            screen = Screen.NewTab,
+            screen = Screen.Browsing,
+            omniboxText = DEFAULT_HOME_URL,
+            loadState = PageLoadState.Loading,
+            pendingLoadUrl = DEFAULT_HOME_URL,
         ),
     )
     val state: StateFlow<BrowserUiState> = _state.asStateFlow()
 
+    private val _webViewCommands = MutableSharedFlow<WebViewCommand>(extraBufferCapacity = 1)
+    val webViewCommands: SharedFlow<WebViewCommand> = _webViewCommands.asSharedFlow()
+
     fun onIntent(intent: BrowserIntent) {
         when (intent) {
             is BrowserIntent.SearchSubmitted -> handleSearchSubmitted(intent.query)
+            is BrowserIntent.OmniboxChanged -> {
+                _state.update { it.copy(omniboxText = intent.text) }
+            }
+            is BrowserIntent.OmniboxFocused -> {
+                _state.update { it.copy(isOmniboxFocused = true) }
+            }
+            is BrowserIntent.OmniboxBlurred -> {
+                _state.update { it.copy(isOmniboxFocused = false) }
+            }
+            is BrowserIntent.GoHome -> handleGoHome()
+            is BrowserIntent.GoBack -> emitWebViewCommand(WebViewCommand.GoBack)
+            is BrowserIntent.GoForward -> emitWebViewCommand(WebViewCommand.GoForward)
+            is BrowserIntent.Reload -> emitWebViewCommand(WebViewCommand.Reload)
+            is BrowserIntent.OpenTabSwitcher -> {
+                _state.update { it.copy(screen = Screen.TabSwitcher) }
+            }
+            is BrowserIntent.CloseTabSwitcher -> {
+                _state.update { current ->
+                    if (current.screen == Screen.TabSwitcher) {
+                        current.copy(screen = Screen.Browsing)
+                    } else {
+                        current
+                    }
+                }
+            }
+            is BrowserIntent.NewTab -> Unit // Phase 6
             is BrowserIntent.LoadUrlConsumed -> _state.update { it.copy(pendingLoadUrl = null) }
             is BrowserIntent.PageStarted -> handlePageStarted(intent.url)
             is BrowserIntent.PageFinished -> handlePageFinished(intent.url)
@@ -45,6 +89,44 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
                 }
             }
             else -> Unit
+        }
+    }
+
+    fun handleSystemBack(): Boolean {
+        val current = _state.value
+        return when {
+            current.screen == Screen.TabSwitcher -> {
+                onIntent(BrowserIntent.CloseTabSwitcher)
+                true
+            }
+            current.screen == Screen.Browsing && current.canGoBack -> {
+                onIntent(BrowserIntent.GoBack)
+                true
+            }
+            else -> false
+        }
+    }
+
+    private fun handleGoHome() {
+        updateActiveTab {
+            it.copy(
+                url = DEFAULT_HOME_URL,
+                loadState = PageLoadState.Loading,
+                isNewTab = false,
+            )
+        }
+        _state.update {
+            it.copy(
+                screen = Screen.Browsing,
+                omniboxText = DEFAULT_HOME_URL,
+                favicon = null,
+                isOmniboxFocused = false,
+                pendingLoadUrl = DEFAULT_HOME_URL,
+                loadState = PageLoadState.Loading,
+                loadProgress = 0,
+                showError = false,
+                errorUrl = null,
+            )
         }
     }
 
@@ -68,13 +150,14 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
                 showError = false,
                 errorUrl = null,
                 pendingLoadUrl = url,
+                isOmniboxFocused = false,
             )
         }
     }
 
     private fun handlePageStarted(url: String) {
         updateActiveTab {
-            it.copy(url = url, loadState = PageLoadState.Loading)
+            it.copy(url = url, loadState = PageLoadState.Loading, isNewTab = false)
         }
         _state.update {
             it.copy(
@@ -83,6 +166,7 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
                 loadProgress = 0,
                 showError = false,
                 errorUrl = null,
+                isOmniboxFocused = false,
             )
         }
     }
@@ -96,6 +180,7 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
                 omniboxText = url,
                 loadState = PageLoadState.Loaded,
                 loadProgress = 100,
+                isOmniboxFocused = false,
             )
         }
     }
@@ -124,7 +209,14 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
                 loadState = PageLoadState.Error(url),
                 showError = true,
                 errorUrl = url,
+                isOmniboxFocused = false,
             )
+        }
+    }
+
+    private fun emitWebViewCommand(command: WebViewCommand) {
+        viewModelScope.launch {
+            _webViewCommands.emit(command)
         }
     }
 
@@ -136,5 +228,9 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
                 },
             )
         }
+    }
+
+    companion object {
+        private const val DEFAULT_HOME_URL = "https://www.google.com"
     }
 }

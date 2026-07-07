@@ -5,9 +5,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.ui.Modifier
+import androidx.core.view.WindowCompat
 import com.example.emptyproject.ui.navigation.SparrowNavHost
 import com.example.emptyproject.ui.theme.SparrowBrowserTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -17,11 +16,13 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        WindowCompat.getInsetsController(window, window.decorView).apply {
+            isAppearanceLightStatusBars = true
+            isAppearanceLightNavigationBars = true
+        }
         setContent {
             SparrowBrowserTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    SparrowNavHost(modifier = Modifier.padding(innerPadding))
-                }
+                SparrowNavHost(modifier = Modifier.fillMaxSize())
             }
         }
     }

@@ -5,7 +5,6 @@ import com.example.emptyproject.model.PageLoadState
 import com.example.emptyproject.model.Tab
 
 enum class Screen {
-    NewTab,
     Browsing,
     TabSwitcher,
 }
@@ -13,7 +12,7 @@ enum class Screen {
 data class BrowserUiState(
     val tabs: List<Tab> = emptyList(),
     val activeTabId: String = "",
-    val screen: Screen = Screen.NewTab,
+    val screen: Screen = Screen.Browsing,
     val omniboxText: String = "",
     val isOmniboxFocused: Boolean = false,
     val loadState: PageLoadState = PageLoadState.Idle,

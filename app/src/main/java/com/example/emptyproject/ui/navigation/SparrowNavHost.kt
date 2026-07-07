@@ -21,12 +21,12 @@ fun SparrowNavHost(
     )
 }
 
-@Preview(name = "Nav Host - New Tab", showBackground = true, showSystemUi = true)
+@Preview(name = "Nav Host - Browsing", showBackground = true, showSystemUi = true)
 @Composable
 private fun SparrowNavHostPreview() {
     SparrowBrowserTheme {
         BrowserShellContent(
-            state = BrowserPreviewData.newTab,
+            state = BrowserPreviewData.home,
             onIntent = {},
         )
     }

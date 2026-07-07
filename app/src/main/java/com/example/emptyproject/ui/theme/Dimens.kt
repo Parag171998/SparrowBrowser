@@ -12,6 +12,8 @@ val DisabledIconAlpha = 0.38f
 
 object Dimens {
     val toolbarHeight = 56.dp
+    val toolbarIconSize = 18.dp
+    val toolbarIconButtonSize = 36.dp
     val omniboxHeight = 40.dp
     val progressBarHeight = 3.dp
     val tabCardElevation = 2.dp

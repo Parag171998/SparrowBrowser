@@ -5,7 +5,9 @@ import android.graphics.Bitmap
 sealed interface BrowserIntent {
     data class SearchSubmitted(val query: String) : BrowserIntent
     data class OmniboxChanged(val text: String) : BrowserIntent
+    data object GoHome : BrowserIntent
     data object OmniboxFocused : BrowserIntent
+    data object OmniboxBlurred : BrowserIntent
     data object GoBack : BrowserIntent
     data object GoForward : BrowserIntent
     data object Reload : BrowserIntent

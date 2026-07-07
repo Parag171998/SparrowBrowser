@@ -1,0 +1,74 @@
+package com.example.emptyproject.ui.components
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.example.emptyproject.ui.BrowserIntent
+import com.example.emptyproject.ui.BrowserUiState
+import com.example.emptyproject.ui.preview.BrowserPreviewData
+import com.example.emptyproject.ui.theme.Dimens
+import com.example.emptyproject.ui.theme.SparrowBrowserTheme
+import com.example.emptyproject.ui.theme.ToolbarBackground
+
+@Composable
+fun BrowserTopBar(
+    state: BrowserUiState,
+    onIntent: (BrowserIntent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .background(ToolbarBackground)
+            .statusBarsPadding()
+            .height(Dimens.toolbarHeight)
+            .padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        NavButtons(
+            canGoBack = state.canGoBack,
+            canGoForward = state.canGoForward,
+            onIntent = onIntent,
+        )
+        Omnibox(
+            text = state.omniboxText,
+            isFocused = state.isOmniboxFocused,
+            favicon = state.favicon,
+            onIntent = onIntent,
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 4.dp),
+        )
+        ReloadStopButton(onIntent = onIntent)
+    }
+}
+
+@Preview(name = "Top Bar - Home", showBackground = true)
+@Composable
+private fun BrowserTopBarNewTabPreview() {
+    SparrowBrowserTheme {
+        BrowserTopBar(
+            state = BrowserPreviewData.home,
+            onIntent = {},
+        )
+    }
+}
+
+@Preview(name = "Top Bar - Browsing", showBackground = true)
+@Composable
+private fun BrowserTopBarBrowsingPreview() {
+    SparrowBrowserTheme {
+        BrowserTopBar(
+            state = BrowserPreviewData.browsing,
+            onIntent = {},
+        )
+    }
+}
