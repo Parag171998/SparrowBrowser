@@ -1,3 +1,20 @@
 <resources>
     <string name="app_name">Sparrow Browser</string>
+    <string name="home_title">Sparrow</string>
+    <string name="home_subtitle">Search or pick a shortcut below</string>
+    <string name="home_disclaimer">Sparrow Browser is a demo project. Pages are loaded from the public web.</string>
+    <string name="omnibox_placeholder">Search or type URL</string>
+    <string name="error_headline">Can\'t reach this page</string>
+    <string name="error_retry">Retry</string>
+    <string name="menu_about">About Sparrow Browser</string>
+    <string name="menu_about_message">A lightweight Android browser built with Jetpack Compose and WebView.</string>
+    <string name="cd_back">Back</string>
+    <string name="cd_forward">Forward</string>
+    <string name="cd_reload">Reload</string>
+    <string name="cd_stop">Stop loading</string>
+    <string name="cd_home">Home</string>
+    <string name="cd_new_tab">New tab</string>
+    <string name="cd_tabs">Tabs</string>
+    <string name="cd_menu">Menu</string>
+    <string name="cd_close_tab">Close tab</string>
 </resources>

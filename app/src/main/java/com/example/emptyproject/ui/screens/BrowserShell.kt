@@ -27,7 +27,9 @@ import com.example.emptyproject.ui.activeShowError
 import com.example.emptyproject.ui.components.BrowserBottomBar
 import com.example.emptyproject.ui.components.BrowserTopBar
 import com.example.emptyproject.ui.components.ErrorContent
+import com.example.emptyproject.ui.components.HomeStartContent
 import com.example.emptyproject.ui.components.MultiTabWebViewLayer
+import com.example.emptyproject.ui.showHomeStart
 import com.example.emptyproject.ui.components.TabSwitcherScreen
 import com.example.emptyproject.ui.preview.BrowserPreviewData
 import com.example.emptyproject.ui.theme.SparrowBrowserTheme
@@ -104,6 +106,13 @@ fun BrowserShellContent(
                 )
             }
 
+            if (state.showHomeStart()) {
+                HomeStartContent(
+                    onIntent = onIntent,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+
             if (state.screen == Screen.TabSwitcher) {
                 TabSwitcherScreen(
                     state = state,
@@ -127,6 +136,7 @@ private fun BrowsingPreviewPlaceholder(
         Text(
             text = when {
                 state.screen == Screen.TabSwitcher -> "Tab Switcher (${state.tabs.size})"
+                state.showHomeStart() -> "Home Start"
                 state.activeShowError() -> "Error"
                 else -> state.activeOmniboxText().ifBlank { "WebView" }
             },
@@ -163,6 +173,17 @@ private fun BrowserShellLoadingPreview() {
     SparrowBrowserTheme {
         BrowserShellContent(
             state = BrowserPreviewData.browsingLoading,
+            onIntent = {},
+        )
+    }
+}
+
+@Preview(name = "Shell - Home", showBackground = true, showSystemUi = true)
+@Composable
+private fun BrowserShellHomePreview() {
+    SparrowBrowserTheme {
+        BrowserShellContent(
+            state = BrowserPreviewData.home,
             onIntent = {},
         )
     }

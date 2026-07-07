@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.emptyproject.model.PageLoadState
 import com.example.emptyproject.model.Tab
+import com.example.emptyproject.util.BrowserConstants
 import com.example.emptyproject.util.resolveInputToUrl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.UUID
@@ -97,7 +98,7 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun handleNewTab() {
-        if (_state.value.tabs.size >= MAX_TABS) return
+        if (_state.value.tabs.size >= BrowserConstants.MAX_TABS) return
         val tabId = UUID.randomUUID().toString()
         _state.update {
             it.copy(
@@ -151,10 +152,10 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
         val tabId = _state.value.activeTabId
         updateTab(tabId) {
             it.copy(
-                url = DEFAULT_HOME_URL,
+                url = BrowserConstants.HOME_URL,
                 loadState = PageLoadState.Loading,
                 isNewTab = false,
-                pendingLoadUrl = DEFAULT_HOME_URL,
+                pendingLoadUrl = BrowserConstants.HOME_URL,
                 loadProgress = 0,
                 showError = false,
                 errorUrl = null,
@@ -300,15 +301,10 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
     private fun createHomeTab(tabId: String): Tab {
         return Tab(
             id = tabId,
-            url = DEFAULT_HOME_URL,
+            url = BrowserConstants.HOME_URL,
             loadState = PageLoadState.Loading,
             isNewTab = false,
-            pendingLoadUrl = DEFAULT_HOME_URL,
+            pendingLoadUrl = BrowserConstants.HOME_URL,
         )
-    }
-
-    companion object {
-        private const val DEFAULT_HOME_URL = "https://www.google.com"
-        private const val MAX_TABS = 10
     }
 }

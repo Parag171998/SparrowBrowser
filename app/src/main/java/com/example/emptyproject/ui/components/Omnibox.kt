@@ -13,10 +13,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,6 +33,8 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.example.emptyproject.R
 import com.example.emptyproject.ui.BrowserIntent
 import com.example.emptyproject.ui.theme.Dimens
 import com.example.emptyproject.ui.theme.OmniboxBackground
@@ -50,7 +48,7 @@ fun Omnibox(
     favicon: Bitmap?,
     onIntent: (BrowserIntent) -> Unit,
     modifier: Modifier = Modifier,
-    placeholder: String = "Search or type URL",
+    placeholder: String = stringResource(R.string.omnibox_placeholder),
 ) {
     var fieldValue by remember { mutableStateOf(TextFieldValue(text)) }
     val focusManager = LocalFocusManager.current
@@ -144,16 +142,16 @@ private fun OmniboxLeadingIcon(
             )
         }
         url.startsWith("https://") -> {
-            Icon(
-                imageVector = Icons.Default.Lock,
+            BrowserIcon(
+                resId = R.drawable.ic_secure,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             )
         }
         else -> {
-            Icon(
-                imageVector = Icons.Default.Search,
+            BrowserIcon(
+                resId = R.drawable.ic_outline_search,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
                 tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),

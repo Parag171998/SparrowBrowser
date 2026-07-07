@@ -2,14 +2,12 @@ package com.example.emptyproject.ui.components
 
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.res.stringResource
+import com.example.emptyproject.R
 import com.example.emptyproject.ui.BrowserIntent
 import com.example.emptyproject.ui.theme.Dimens
 import com.example.emptyproject.ui.theme.DisabledIconAlpha
@@ -27,9 +25,9 @@ fun NavButtons(
             enabled = canGoBack,
             modifier = Modifier.size(Dimens.toolbarIconButtonSize),
         ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = "Back",
+            BrowserIcon(
+                resId = R.drawable.ic_nav_back,
+                contentDescription = stringResource(R.string.cd_back),
                 modifier = Modifier
                     .size(Dimens.toolbarIconSize)
                     .alpha(if (canGoBack) 1f else DisabledIconAlpha),
@@ -40,9 +38,9 @@ fun NavButtons(
             enabled = canGoForward,
             modifier = Modifier.size(Dimens.toolbarIconButtonSize),
         ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = "Forward",
+            BrowserIcon(
+                resId = R.drawable.ic_nav_forward,
+                contentDescription = stringResource(R.string.cd_forward),
                 modifier = Modifier
                     .size(Dimens.toolbarIconSize)
                     .alpha(if (canGoForward) 1f else DisabledIconAlpha),

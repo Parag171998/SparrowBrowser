@@ -2,6 +2,7 @@ package com.example.emptyproject.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -24,6 +25,7 @@ import com.example.emptyproject.ui.activeOmniboxText
 import com.example.emptyproject.ui.preview.BrowserPreviewData
 import com.example.emptyproject.ui.theme.Dimens
 import com.example.emptyproject.ui.theme.SparrowBrowserTheme
+import com.example.emptyproject.ui.theme.OmniboxBorder
 import com.example.emptyproject.ui.theme.ToolbarBackground
 
 @Composable
@@ -68,6 +70,7 @@ fun BrowserTopBar(
             loadState = state.activeLoadState(),
             progress = state.activeLoadProgress(),
         )
+        HorizontalDivider(color = OmniboxBorder, thickness = 1.dp)
     }
 }
 

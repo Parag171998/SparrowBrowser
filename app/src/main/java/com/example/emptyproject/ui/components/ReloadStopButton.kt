@@ -1,14 +1,12 @@
 package com.example.emptyproject.ui.components
 
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.emptyproject.R
 import com.example.emptyproject.ui.BrowserIntent
 import com.example.emptyproject.ui.theme.Dimens
 import com.example.emptyproject.ui.theme.SparrowBrowserTheme
@@ -29,9 +27,11 @@ fun ReloadStopButton(
         },
         modifier = modifier.size(Dimens.toolbarIconButtonSize),
     ) {
-        Icon(
-            imageVector = if (isLoading) Icons.Default.Close else Icons.Default.Refresh,
-            contentDescription = if (isLoading) "Stop loading" else "Reload",
+        BrowserIcon(
+            resId = if (isLoading) R.drawable.ic_stop else R.drawable.ic_reload,
+            contentDescription = stringResource(
+                if (isLoading) R.string.cd_stop else R.string.cd_reload,
+            ),
             modifier = Modifier.size(Dimens.toolbarIconSize),
         )
     }

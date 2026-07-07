@@ -14,8 +14,13 @@ object Dimens {
     val toolbarHeight = 56.dp
     val toolbarIconSize = 18.dp
     val toolbarIconButtonSize = 36.dp
+    val bottomBarIconSize = 24.dp
     val omniboxHeight = 40.dp
     val progressBarHeight = 3.dp
     val tabCardElevation = 2.dp
     val tabCardCornerRadius = 12.dp
+    val shortcutCardCornerRadius = 12.dp
+    val homeShortcutTopSpacing = 40.dp
+    val tabCountBadgeSize = 20.dp
+    val tabCountBadgeCornerRadius = 4.dp
 }
