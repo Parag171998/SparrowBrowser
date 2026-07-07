@@ -23,4 +23,5 @@ data class BrowserUiState(
     val favicon: Bitmap? = null,
     val showError: Boolean = false,
     val errorUrl: String? = null,
+    val pendingLoadUrl: String? = null,
 )

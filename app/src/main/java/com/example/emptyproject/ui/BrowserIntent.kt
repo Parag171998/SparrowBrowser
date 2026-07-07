@@ -16,6 +16,7 @@ sealed interface BrowserIntent {
     data class CloseTab(val tabId: String) : BrowserIntent
     data object NewTab : BrowserIntent
     data object RetryLoad : BrowserIntent
+    data object LoadUrlConsumed : BrowserIntent
     data class PageStarted(val url: String) : BrowserIntent
     data class PageFinished(val url: String) : BrowserIntent
     data class ProgressChanged(val progress: Int) : BrowserIntent

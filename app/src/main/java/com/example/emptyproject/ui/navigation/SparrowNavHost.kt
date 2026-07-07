@@ -25,6 +25,9 @@ fun SparrowNavHost(
 @Composable
 private fun SparrowNavHostPreview() {
     SparrowBrowserTheme {
-        BrowserShellContent(state = BrowserPreviewData.newTab)
+        BrowserShellContent(
+            state = BrowserPreviewData.newTab,
+            onIntent = {},
+        )
     }
 }
