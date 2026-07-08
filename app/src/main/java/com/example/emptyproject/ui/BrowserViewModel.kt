@@ -2,10 +2,12 @@ package com.example.emptyproject.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.os.Bundle
 import com.example.emptyproject.model.PageLoadState
 import com.example.emptyproject.model.Tab
 import com.example.emptyproject.util.BrowserConstants
 import com.example.emptyproject.util.resolveInputToUrl
+import com.example.emptyproject.webview.isChromeErrorUrl
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.util.UUID
 import javax.inject.Inject
@@ -34,6 +36,18 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
 
     private val _webViewCommands = MutableSharedFlow<WebViewCommand>(extraBufferCapacity = 1)
     val webViewCommands: SharedFlow<WebViewCommand> = _webViewCommands.asSharedFlow()
+
+    private val savedWebViewStates = mutableMapOf<String, Bundle>()
+
+    fun getSavedWebViewState(tabId: String): Bundle? = savedWebViewStates[tabId]
+
+    fun saveWebViewState(tabId: String, bundle: Bundle) {
+        savedWebViewStates[tabId] = bundle
+    }
+
+    private fun clearWebViewState(tabId: String) {
+        savedWebViewStates.remove(tabId)
+    }
 
     fun onIntent(intent: BrowserIntent) {
         when (intent) {
@@ -125,6 +139,7 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
         val current = _state.value
         val remaining = current.tabs.filter { it.id != tabId }
         if (remaining.isEmpty()) {
+            savedWebViewStates.clear()
             val newTabId = UUID.randomUUID().toString()
             _state.value = BrowserUiState(
                 tabs = listOf(createHomeTab(newTabId)),
@@ -139,6 +154,7 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
         } else {
             current.activeTabId
         }
+        clearWebViewState(tabId)
         _state.update {
             it.copy(
                 tabs = remaining,
@@ -150,6 +166,7 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
 
     private fun handleGoHome() {
         val tabId = _state.value.activeTabId
+        clearWebViewState(tabId)
         updateTab(tabId) {
             Tab(id = it.id, isNewTab = true)
         }
@@ -200,6 +217,7 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun handlePageStarted(tabId: String, url: String) {
+        if (isChromeErrorUrl(url)) return
         updateTab(tabId) {
             it.copy(
                 url = url,
@@ -216,6 +234,7 @@ class BrowserViewModel @Inject constructor() : ViewModel() {
     }
 
     private fun handlePageFinished(tabId: String, url: String) {
+        if (isChromeErrorUrl(url)) return
         val tab = _state.value.tabs.find { it.id == tabId } ?: return
         if (tab.showError || tab.loadState is PageLoadState.Error) return
         updateTab(tabId) {

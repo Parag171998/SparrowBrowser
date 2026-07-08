@@ -1,5 +1,6 @@
 package com.example.emptyproject.ui.screens
 
+import android.os.Bundle
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
@@ -58,6 +59,8 @@ fun BrowserShell(
         state = state,
         onIntent = viewModel::onIntent,
         webViewCommands = viewModel.webViewCommands,
+        getSavedWebViewState = viewModel::getSavedWebViewState,
+        onSaveWebViewState = viewModel::saveWebViewState,
         modifier = modifier,
     )
 }
@@ -68,6 +71,8 @@ fun BrowserShellContent(
     onIntent: (BrowserIntent) -> Unit,
     modifier: Modifier = Modifier,
     webViewCommands: SharedFlow<WebViewCommand> = MutableSharedFlow(),
+    getSavedWebViewState: (String) -> Bundle? = { null },
+    onSaveWebViewState: (String, Bundle) -> Unit = { _, _ -> },
 ) {
     val hasWebView = state.tabs.any { !it.isNewTab }
 
@@ -95,6 +100,8 @@ fun BrowserShellContent(
                     screen = state.screen,
                     onIntent = onIntent,
                     webViewCommands = webViewCommands,
+                    getSavedWebViewState = getSavedWebViewState,
+                    onSaveWebViewState = onSaveWebViewState,
                     modifier = Modifier.fillMaxSize(),
                 )
             }
